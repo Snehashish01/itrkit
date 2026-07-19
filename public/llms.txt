@@ -1,0 +1,8 @@
+# Family ITR Workspace
+
+Privacy-first browser workspace for coordinating Indian individual income-tax returns for AY 2026-27.
+
+- [Application](/): Browser-local organizer and evidence workflow.
+- Privacy and operating boundary: Tax records stay in the browser unless a user explicitly enables a direct BYO API request.
+
+The application does not submit or e-verify returns. Users must validate final figures and eligibility with the official Income Tax Department utility.

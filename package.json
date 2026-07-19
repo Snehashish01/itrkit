@@ -1,0 +1,30 @@
+{
+  "name": "family-itr-organizer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "build": "node ./node_modules/typescript/bin/tsc -b && node ./node_modules/vite/bin/vite.js build",
+    "lint": "node ./node_modules/oxlint/bin/oxlint",
+    "test:smoke": "node ./tests/smoke.mjs",
+    "test:parse": "node --disable-warning=ExperimentalWarning --experimental-strip-types --loader ./scripts/ts-ext-loader.mjs tests/parse.test.ts",
+    "preview": "node ./node_modules/vite/bin/vite.js preview"
+  },
+  "dependencies": {
+    "lucide-react": "^1.24.0",
+    "pdfjs-dist": "^6.1.200",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "oxlint": "^1.71.0",
+    "playwright-core": "^1.61.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  }
+}
