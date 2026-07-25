@@ -51,7 +51,7 @@ Design notes that must be preserved:
 
 Deterministic, offline, estimate-only. Leaf module (no imports from the rest of the app), so it stays cycle-free and unit-checkable.
 
-- `compute.ts` — `compareRegimes(inputs)` runs `computeRegime` for both `'old'` and `'new'` (AY 2026-27 / FY 2025-26). Encodes: new slabs (nil ≤₹4L … 30% >₹24L) and age-banded old slabs; standard deduction (new ₹75k / old ₹50k); Chapter VI-A (old-regime deductions, plus 80CCD(2) in both); special rates (STCG 111A 20%, LTCG 112A 12.5% over ₹1.25L, other LTCG 12.5%); rebate 87A (new: total income ≤₹12L with marginal relief; old: ≤₹5L); 4% cess. **Surcharge is simplified to 0** — flag for >₹50L income. Never a filing value.
+- `compute.ts` — `compareRegimes(inputs)` runs `computeRegime` for both `'old'` and `'new'` (AY 2026-27 / FY 2025-26). Encodes: new slabs (nil ≤₹4L … 30% >₹24L) and age-banded old slabs; standard deduction (new ₹75k / old ₹50k); Chapter VI-A (old-regime deductions incl. 80EEA/80E/80EEB/80CCH, plus 80CCD(2) in both; 80TTA/80TTB capped by surviving interest after BFLA); special rates (STCG 111A 20%, LTCG 112A 12.5% over ₹1.25L, other LTCG 12.5%); rebate 87A (new: total income ≤₹12L with marginal relief; old: ≤₹5L); **surcharge with marginal relief at ₹50L/₹1cr/₹2cr/₹5cr** (new regime caps at 25%); 4% cess. Also: a **house-property schedule** (`houseProperties[]`), **brought-forward losses** (sec 43(5) specified F&O → non-salary; speculative → speculative; LTCG → LTCG; HP → HP) with closing carry-forward in `TaxResult`, a rough **234B** estimate, and `recommendItrForm(inputs)`. 234C and a few edge cases remain simplified. Never a filing value.
 - `seed.ts` — `seedTaxInputs(documents)` reconciles a member's documents and maps matched `FieldKey`s onto income + deduction inputs (grossSalary; exempt allowances u/s 10; professional tax; house-property income/loss; interest = savings+deposits; dividend; 80C; 80TTA from savings-bank interest (engine-capped); employer NPS 80CCD(2); TDS; self-assessment). Capital gains and any remaining deductions are user-entered.
 - `TaxComputationPanel.tsx` merges `{ ...emptyTaxInputs(), ...seedTaxInputs(docs), ...member.taxInputs }` — income auto-seeds live from documents; **user overrides win** and persist. All capital-gains heads render even at zero.
 
@@ -88,7 +88,7 @@ Everything an external OpenAI-compatible provider needs lives in `src/components
 - **No backend / no server functions** for documents, prompts, keys, or tax facts. Static deploy only; keep `vercel.json` security headers/CSP.
 - **Persist only through `vault.ts`.** If you add a field to `DocumentAnalysis`/`StoredDocument`, you **must** update the `isDocumentMetadata` validator in `vault.ts` — keep new fields **optional** for backward compatibility, or reads of already-stored documents will throw. Same rule for `Member`: new fields (e.g. `taxInputs`) must stay optional in `isMember` (`filing.ts`), or already-stored members get filtered out on load.
 - Keep PDF caps and `redactSensitiveText`. Never log or persist PAN, Aadhaar, name, OTP, or API keys.
-- Deterministic parsing must **never invent values**; low confidence → surface for human review, never auto-fill. Tax figures are an **estimate only** (surcharge simplified) — never a filing value. **Never automate filing.**
+- Deterministic parsing must **never invent values**; low confidence → surface for human review, never auto-fill. Tax figures are an **estimate only** (surcharge modelled with marginal relief; 234C and a few edge cases simplified) — never a filing value. **Never automate filing.**
 
 ## Roadmap — high-value next steps
 
@@ -96,10 +96,9 @@ Tracked here so any agent can pick them up. Keep the hard invariants (offline, d
 
 - **Broker Tax P&L importer** — parse the Zerodha (and similar) `.xlsx`/`.csv` Tax P&L into the capital-gains heads (`stcgEquity111A`, `ltcgEquity112A`, `stcgOther`, `ltcgOther`, `intradaySpeculative`, `fnoBusiness`) the way salary already auto-seeds. Add a parser + `FieldKey`s + `seed.ts` mapping.
 - **ITR prefill JSON import** — read the portal's downloaded prefill JSON to cross-check parsed figures (offline, read-only).
-- **Advance-tax & interest u/s 234B/234C** — quarterly schedule and shortfall interest estimate.
+- **Advance-tax & interest u/s 234C** — quarterly shortfall interest estimate (234B is now a rough estimate; 234C is not).
 - **What-if regime slider / exportable one-page statement** — printable/PDF computation summary for the taxpayer's records.
-- **Tax-engine accuracy** — surcharge (with marginal relief) above ₹50L is currently simplified to 0; add it and flag high-income cases. (House-property loss set-off is already regime-aware.)
-- **Extend `evidencePacket`** to the structured `fields` (still minimized; no source quotes/PII) — see the BYO API section.
+- **Surcharge marginal-relief edge cases** — the modelled marginal relief covers the standard thresholds; verify against the official utility for incomes sitting exactly on a threshold with mixed capital gains.
 
 ## Gotchas
 

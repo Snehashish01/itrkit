@@ -2,7 +2,7 @@
 
 A privacy-first browser workspace for coordinating multiple Indian individual income-tax returns for AY 2026-27. It combines a source-document vault, local coordinate-aware text extraction, content-based document classification, structured field extraction with cross-document reconciliation, an offline old-vs-new tax-regime estimate, filing checklists, and an evidence-aware conversation panel.
 
-The app does not submit or e-verify returns. Return-form guidance, extracted amounts, and the tax estimate are preparation aids — not tax advice and not final filing values (the estimate simplifies surcharge and some edge cases). Confirm the return in the current official Income Tax Department utility.
+The app does not submit or e-verify returns. Return-form guidance, extracted amounts, and the tax estimate are preparation aids — not tax advice and not final filing values (the estimate models surcharge with marginal relief; 234C and a few edge cases remain simplified). Confirm the return in the current official Income Tax Department utility.
 
 > **New here?** Follow the step-by-step [User Guide](USER_GUIDE.md) to set up your vault, add family members, import documents, and track filing progress. This README focuses on the privacy model, architecture, and operations.
 
@@ -14,11 +14,11 @@ The app does not submit or e-verify returns. Return-form guidance, extracted amo
 - AAD-bound record identity, ciphertext fingerprints, and an encrypted revisioned manifest detect record deletion, reassignment, swapping, and modification before unlock.
 - Encrypted v2 full-vault export and authenticated, bounded restore, including documents and conversations.
 - Local PDF text extraction with PDF.js; CSV and JSON text are also read locally.
-- Content-first document classification by document signatures (AIS, TIS, Form 26AS, Form 16, CPC/ITR computation), with the Form 16 Part B computation fully parsed (gross salary, exemptions u/s 10, standard deduction, professional tax, house-property income/loss, gross total income, 80C, employer NPS, total income).
+- Content-first document classification by document signatures (AIS, TIS, Form 26AS, Form 16, CPC/ITR computation / prior-ITR JSON), with the Form 16 Part B computation fully parsed (gross salary, exemptions u/s 10, standard deduction, professional tax, house-property income/loss, gross total income, 80C, employer NPS, total income). AIS also yields **TCS** (Part B1), **rent** (Part B7), and **deterministic cautions** for Part B3 tax payments that belong to a prior assessment year; a prior-year ITR JSON seeds **carry-forward losses** from Schedule CFL.
 - Structured field extraction with cross-document reconciliation that flags matches and mismatches for the same figure across AIS, TIS, Form 26AS, and Form 16.
-- Conservative amount candidates linked to the source document and page.
-- An offline, deterministic old-vs-new regime tax estimate for AY 2026-27 — income auto-seeds from your documents; deductions (incl. an auto-seeded 80TTA) and capital gains are editable; shows tax payable or refund per regime and the lower-tax regime.
-- A deterministic local assistant for evidence summaries, missing sources, form triage, and next steps.
+- Conservative amount candidates linked to the source document and page, plus per-document caution banners (prior-year challan trap, 26AS overbooked status).
+- An offline, deterministic old-vs-new regime tax estimate for AY 2026-27 — income, **TDS + TCS** credits, and **carry-forward losses** auto-seed from your documents; a **house-property schedule** (self-occupied / let-out / deemed, up to two for ITR-1 under G.S.R. 226(E)), deductions (incl. 80TTA auto-seeded and capped by surviving interest, plus 80EEA/80E/80EEB/80CCH), **exempt income (Schedule EI)**, capital gains, and a **filing month** are editable; shows tax payable or refund, **surcharge with marginal relief**, a rough **234B** estimate, brought-forward loss set-off and closing carry-forward, and the lower-tax regime. An **ITR-form recommendation** (ITR-1/2/3) and storable filing details (form, section, regime, filing outcome) accompany the estimate.
+- A deterministic local assistant for evidence summaries, missing sources, ITR-form triage (incl. carry-forward/ITR-3 guidance), and next steps.
 - An optional OpenAI-compatible BYO API mode with a configurable endpoint and model.
 - Browser persistence status, local usage visibility, per-document deletion, and member-level cleanup.
 - One-time migration from the previous `family-itr-organizer-v1` localStorage format.
@@ -46,7 +46,7 @@ The app does not submit or e-verify returns. Return-form guidance, extracted amo
 
 PDF, JSON, CSV, XLSX, XLS, JPG, JPEG, and PNG files up to 25 MB can be stored. Text extraction currently supports selectable-text PDFs, JSON, and CSV. Images and spreadsheets are stored locally for manual review; OCR and spreadsheet parsing are not yet implemented.
 
-Document classification is **content-first** — it reads document signatures from the text, and the filename is only a fallback — but the result should still be reviewed. Extracted amounts are structured fields, reconciled across documents where the same figure appears in more than one statement; they remain preparation aids and must be verified against the original source. The tax estimate is deterministic and offline but simplifies surcharge and some edge cases. PDF analysis is limited to 250 pages, two million extracted characters, and 30 seconds; larger or pathological documents are rejected.
+Document classification is **content-first** — it reads document signatures from the text, and the filename is only a fallback — but the result should still be reviewed. Extracted amounts are structured fields, reconciled across documents where the same figure appears in more than one statement; they remain preparation aids and must be verified against the original source. The tax estimate is deterministic and offline; surcharge (with marginal relief) and 234B are modelled, while 234C and a few edge cases remain simplified. PDF analysis is limited to 250 pages, two million extracted characters, and 30 seconds; larger or pathological documents are rejected.
 
 ## Using The App
 

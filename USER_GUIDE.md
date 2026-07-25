@@ -19,7 +19,7 @@ For the privacy and security architecture behind these steps, see [README.md](RE
 ## What this app does **not** do
 
 - It does **not** submit, file, or e-verify a return. You do that on the official portal.
-- Its tax figure is an **offline estimate** for comparing the old and new regimes — helpful for planning, but **not** a final filing value and **not** tax advice (it simplifies surcharge and some edge cases). Always confirm in the official utility.
+- Its tax figure is an **offline estimate** for comparing the old and new regimes — helpful for planning, but **not** a final filing value and **not** tax advice (it models surcharge with marginal relief; 234C and some edge cases remain simplified). Always confirm in the official utility.
 - It does **not** need your PAN, Aadhaar, bank details, portal password, or OTP. **Never enter them.**
 
 > Always confirm eligibility, figures, and the correct ITR form in the official Income Tax Department utility before filing.
@@ -131,7 +131,7 @@ Two things to know:
 - **Regime matters for deductions.** Most Chapter VI-A deductions (80C, 80D, 80TTA, HRA exemption, etc.) apply only in the **old** regime; the new regime allows very few (mainly the standard deduction and employer NPS u/s 80CCD(2)). So a deduction usually changes only the old-regime column.
 - **80TTA / 80TTB.** 80TTA is auto-filled from your **savings-bank** interest (up to ₹10,000, old regime only). Fixed-deposit interest does not qualify for 80TTA. If the taxpayer is a **senior**, switch the age band and raise the field to claim **80TTB** (up to ₹50,000, including fixed-deposit interest).
 
-> This is an estimate for planning and regime choice — not a filing value. Surcharge and some edge cases are simplified. Confirm every figure and your regime choice in the official AY 2026-27 utility before filing.
+> This is an estimate for planning and regime choice — not a filing value. Surcharge (with marginal relief) and 234B are modelled; 234C and some edge cases remain simplified. Confirm every figure and your regime/form choice in the official AY 2026-27 utility before filing.
 
 ---
 

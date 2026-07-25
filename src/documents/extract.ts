@@ -2,7 +2,7 @@ import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { DocumentKey } from '../domain/filing'
 import { buildRows, rowsToText } from './layout'
 import type { ExtractedPage as LayoutPage } from './layout'
-import { classifyDocument, parseReport } from './reports'
+import { classifyDocument, parseReport, parseWarnings } from './reports'
 import type { ParsedField } from './reports'
 
 const maximumPdfPages = 250
@@ -48,6 +48,10 @@ export type DocumentAnalysis = {
   pages: ExtractedPage[]
   fields: ParsedField[]
   facts: FactCandidate[]
+  // Human-readable, deterministic caution messages (e.g. an AIS Part B3 tax
+  // payment that belongs to a prior assessment year). Optional for backward
+  // compatibility with documents stored before this field existed.
+  warnings?: string[]
 }
 
 const factPatterns: Array<{
@@ -185,11 +189,13 @@ export async function analyzeDocument(file: File): Promise<DocumentAnalysis> {
     }
   }
   const fields = kind ? parseReport(kind, pages) : []
+  const warnings = kind && hasText ? parseWarnings(kind, pages) : []
   return {
     status: hasText ? 'ready' : 'empty',
     kind,
     pages: storedPages,
     fields,
     facts: hasText ? findFacts(storedPages) : [],
+    warnings,
   }
 }

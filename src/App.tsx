@@ -386,7 +386,7 @@ function App() {
                       </span>
                       <span className="member-row-copy">
                         <strong>{member.alias}</strong>
-                        <span>{member.capitalGains ? 'Review for ITR-2' : 'Likely ITR-1'}</span>
+                        <span>{member.filingForm ?? (member.capitalGains ? 'Review for ITR-2' : 'Likely ITR-1')}</span>
                       </span>
                       <span className="row-progress">{progress}%</span>
                       <ChevronRight size={16} />
@@ -443,14 +443,23 @@ function App() {
                   </div>
                 </div>
 
-                <div className={`form-guidance ${selectedMember.capitalGains ? 'warning' : ''}`}>
-                  {selectedMember.capitalGains ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}
+                <div className={`form-guidance ${selectedMember.filingForm === 'ITR-3' || selectedMember.capitalGains ? 'warning' : ''}`}>
+                  {selectedMember.filingForm === 'ITR-3' || selectedMember.capitalGains ? (
+                    <AlertTriangle size={20} />
+                  ) : (
+                    <CheckCircle2 size={20} />
+                  )}
                   <div>
-                    <strong>{selectedMember.capitalGains ? 'Review for ITR-2' : 'Likely ITR-1'}</strong>
+                    <strong>
+                      {selectedMember.filingForm ??
+                        (selectedMember.capitalGains ? 'Review for ITR-2' : 'Likely ITR-1')}
+                    </strong>
                     <p>
-                      {selectedMember.capitalGains
-                        ? 'Capital gains usually require ITR-2. Check the narrow AY 2026-27 ITR-1 listed-equity LTCG exception in the official utility.'
-                        : 'Suitable only if every current ITR-1 eligibility condition is met. Confirm in the official utility.'}
+                      {selectedMember.filingForm === 'ITR-3'
+                        ? 'Business income or carry-forward losses require ITR-3 (Schedule BP/CFL). Confirm in the official utility.'
+                        : selectedMember.filingForm === 'ITR-2' || selectedMember.capitalGains
+                          ? 'Capital gains usually require ITR-2. Check the narrow AY 2026-27 ITR-1 listed-equity LTCG exception in the official utility.'
+                          : 'Suitable only if every current ITR-1 eligibility condition is met. Confirm in the official utility.'}
                     </p>
                   </div>
                 </div>
@@ -466,6 +475,9 @@ function App() {
                   member={selectedMember}
                   onInputsChange={(taxInputs) =>
                     updateMember(selectedMember.id, (member) => ({ ...member, taxInputs }))
+                  }
+                  onMetaChange={(meta) =>
+                    updateMember(selectedMember.id, (member) => ({ ...member, ...meta }))
                   }
                 />
 

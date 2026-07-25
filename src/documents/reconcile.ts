@@ -24,6 +24,7 @@ const fieldOrder: FieldKey[] = [
   'standardDeduction',
   'professionalTax',
   'housePropertyIncome',
+  'rentReceived',
   'grossTotalIncome',
   'totalIncome',
   'interestSavings',
@@ -32,8 +33,13 @@ const fieldOrder: FieldKey[] = [
   'deduction80C',
   'deduction80CCD2',
   'totalTdsSalary',
+  'totalTcs',
   'selfAssessmentTax',
   'totalTaxPaid',
+  'bfSpecifiedBusinessLoss',
+  'bfSpeculativeBusinessLoss',
+  'bfLtcgLoss',
+  'bfHpLoss',
 ]
 
 const shortKinds: Partial<Record<DocumentKey, string>> = {

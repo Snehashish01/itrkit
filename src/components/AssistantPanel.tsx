@@ -4,6 +4,9 @@ import { Bot, Cloud, KeyRound, Laptop, Send, Settings2, Trash2 } from 'lucide-re
 import { documentItems } from '../domain/filing'
 import type { DocumentKey, Member } from '../domain/filing'
 import { reconcile, shortDocKind } from '../documents/reconcile'
+import { seedTaxInputs } from '../tax/seed'
+import { compareRegimes, emptyTaxInputs, recommendItrForm } from '../tax/compute'
+import type { TaxInputs } from '../tax/compute'
 import {
   appendConversationMessage,
   clearConversation,
@@ -59,6 +62,14 @@ function buildLocalAnswer(member: Member, documents: StoredDocument[], question:
   const missing = documentItems
     .filter(({ key, capitalGainsOnly }) => !member.documents[key] && (!capitalGainsOnly || member.capitalGains))
     .map(({ label }) => label)
+  const inputs: TaxInputs = { ...emptyTaxInputs(), ...seedTaxInputs(documents), ...member.taxInputs }
+  const recommendedForm = recommendItrForm(inputs)
+  const form = member.filingForm ?? recommendedForm
+  const hasBfLoss =
+    inputs.bfSpecifiedBusinessLoss > 0 ||
+    inputs.bfSpeculativeBusinessLoss > 0 ||
+    inputs.bfLtcgLoss > 0 ||
+    inputs.bfHpLoss > 0
   const sections: string[] = []
   const asksForEvidence = ['income', 'salary', 'tds', 'interest', 'dividend', 'summary', 'summarize'].some((term) =>
     normalized.includes(term),
@@ -97,9 +108,16 @@ function buildLocalAnswer(member: Member, documents: StoredDocument[], question:
   }
   if (asksForForm) {
     sections.push(
-      member.capitalGains
-        ? 'This profile needs an ITR-2 review because capital gains are present. Use ITR-1 only if the exact AY 2026-27 eligibility rules and the narrow listed-equity LTCG exception are satisfied in the official utility.'
-        : 'ITR-1 is the current working assumption, subject to every AY 2026-27 eligibility condition. Validate the final selection in the official utility.',
+      form === 'ITR-3'
+        ? `${member.filingForm ? 'Your chosen form is ITR-3.' : 'ITR-3 is recommended'} because business income or carry-forward losses are present — ITR-3 keeps the carry-forward alive via Schedule BP/CFL. Confirm in the official utility.`
+        : form === 'ITR-2'
+          ? 'This profile needs an ITR-2 review because capital gains are present. Use ITR-1 only if the narrow AY 2026-27 listed-equity LTCG exception applies. Confirm in the official utility.'
+          : 'ITR-1 is the current working assumption, subject to every AY 2026-27 eligibility condition. Validate the final selection in the official utility.',
+    )
+  }
+  if (hasBfLoss && (asksForMissing || asksForForm)) {
+    sections.push(
+      'Carry-forward losses are present: file ITR-3 to preserve the 8-year set-off window (Schedule BP/CFL/BFLA). Do not skip Schedule BP even if this year has no trading.',
     )
   }
   if (sections.length > 0) return sections.join('\n\n')
@@ -107,11 +125,23 @@ function buildLocalAnswer(member: Member, documents: StoredDocument[], question:
 }
 
 function evidencePacket(member: Member, documents: StoredDocument[]) {
+  const inputs: TaxInputs = { ...emptyTaxInputs(), ...seedTaxInputs(documents), ...member.taxInputs }
+  const comparison = compareRegimes(inputs)
   return {
     assessmentYear: '2026-27',
     profile: {
       salaryOrPension: member.salaryOrPension,
       capitalGains: member.capitalGains,
+    },
+    filingForm: member.filingForm ?? recommendItrForm(inputs),
+    chosenRegime: member.chosenRegime ?? comparison.recommended,
+    carryForward: {
+      hasBfLoss:
+        inputs.bfSpecifiedBusinessLoss > 0 ||
+        inputs.bfSpeculativeBusinessLoss > 0 ||
+        inputs.bfLtcgLoss > 0 ||
+        inputs.bfHpLoss > 0,
+      hasExemptIncome: inputs.exemptIncome > 0,
     },
     checklist: documentItems.map(({ key, label }) => ({ label, available: member.documents[key] })),
     candidates: extractedValues(documents).map((value) => ({

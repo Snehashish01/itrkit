@@ -1318,7 +1318,8 @@ function isDocumentMetadata(
     (metadata.analysis.fields === undefined || Array.isArray(metadata.analysis.fields)) &&
     (metadata.analysis.kind === undefined ||
       metadata.analysis.kind === null ||
-      documentItems.some(({ key }) => key === metadata.analysis?.kind))
+      documentItems.some(({ key }) => key === metadata.analysis?.kind)) &&
+    (metadata.analysis.warnings === undefined || Array.isArray(metadata.analysis.warnings))
   )
 }
 

@@ -28,14 +28,26 @@ export function seedTaxInputs(documents: StoredDocument[]): Partial<TaxInputs> {
   if (byKey.has('dividend')) seed.dividends = get('dividend')
 
   // 80TTA (old regime): deduction for savings-bank interest, capped by the tax
-  // engine (₹10,000 below 60). Seniors' 80TTB (incl. deposit interest, ₹50,000)
-  // is surfaced as a UI hint since the age band is applied after seeding.
+  // engine (₹10,000 below 60) and by the interest surviving BFLA set-off. Seniors'
+  // 80TTB (incl. deposit interest, ₹50,000) is surfaced as a UI hint since the age
+  // band is applied after seeding.
   if (get('interestSavings') > 0) seed.ded80TTA = get('interestSavings')
 
   if (byKey.has('deduction80C')) seed.ded80C = get('deduction80C')
   if (byKey.has('deduction80CCD2')) seed.ded80CCD2Employer = get('deduction80CCD2')
 
-  if (byKey.has('totalTdsSalary')) seed.tdsTcs = get('totalTdsSalary')
+  // Tax credits: TDS on salary (Form 16 / 26AS Part I) + TCS (26AS Part VI /
+  // AIS). Both are credits against the year's tax liability.
+  const tdsTcs = get('totalTdsSalary') + get('totalTcs')
+  if (tdsTcs > 0) seed.tdsTcs = tdsTcs
   if (byKey.has('selfAssessmentTax')) seed.selfAssessmentTax = get('selfAssessmentTax')
+
+  // Brought-forward (carry-forward) losses, best-effort seeded from a prior-year
+  // ITR's Schedule CFL (see parseComputation in reports.ts). The user can edit.
+  if (byKey.has('bfSpecifiedBusinessLoss')) seed.bfSpecifiedBusinessLoss = get('bfSpecifiedBusinessLoss')
+  if (byKey.has('bfSpeculativeBusinessLoss')) seed.bfSpeculativeBusinessLoss = get('bfSpeculativeBusinessLoss')
+  if (byKey.has('bfLtcgLoss')) seed.bfLtcgLoss = get('bfLtcgLoss')
+  if (byKey.has('bfHpLoss')) seed.bfHpLoss = get('bfHpLoss')
+
   return seed
 }

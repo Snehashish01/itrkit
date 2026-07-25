@@ -1,4 +1,6 @@
-import type { TaxInputs } from '../tax/compute'
+import type { ItrForm, Regime, TaxInputs } from '../tax/compute'
+
+export type FilingSection = '139(1)' | '139(5)' | '139(3)'
 
 export type FilingStage =
   | 'documentsReady'
@@ -28,6 +30,15 @@ export type Member = {
   documents: Record<DocumentKey, boolean>
   stages: Record<FilingStage, boolean>
   taxInputs?: Partial<TaxInputs>
+  // Filing-decision + outcome metadata (all optional for backward compatibility
+  // with members stored before these fields existed). The engine recommends a
+  // form/regime; the user's choice is stored here.
+  filingForm?: ItrForm
+  filingSection?: FilingSection
+  chosenRegime?: Regime
+  filedAt?: string // ISO date the return was submitted, if filed
+  acknowledgementNo?: string // ITR-V / acknowledgement number, if filed
+  selfAssessmentChallan?: string // e-Pay Tax challan reference, if paid
 }
 
 export const documentItems: Array<{
@@ -117,6 +128,11 @@ export const emptyStages = (): Record<FilingStage, boolean> => ({
 const documentKeys = documentItems.map(({ key }) => key)
 const filingStages = stageItems.map(({ key }) => key)
 
+const itrForms: ItrForm[] = ['ITR-1', 'ITR-2', 'ITR-3']
+const filingSections: FilingSection[] = ['139(1)', '139(5)', '139(3)']
+const regimes: Regime[] = ['old', 'new']
+const optionalString = (value: unknown) => value === undefined || typeof value === 'string'
+
 export function isMember(value: unknown): value is Member {
   if (!value || typeof value !== 'object') return false
   const member = value as Partial<Member>
@@ -130,6 +146,12 @@ export function isMember(value: unknown): value is Member {
     !!member.stages &&
     filingStages.every((key) => typeof member.stages?.[key] === 'boolean') &&
     (member.taxInputs === undefined ||
-      (typeof member.taxInputs === 'object' && member.taxInputs !== null))
+      (typeof member.taxInputs === 'object' && member.taxInputs !== null)) &&
+    (member.filingForm === undefined || itrForms.includes(member.filingForm)) &&
+    (member.filingSection === undefined || filingSections.includes(member.filingSection)) &&
+    (member.chosenRegime === undefined || regimes.includes(member.chosenRegime)) &&
+    optionalString(member.filedAt) &&
+    optionalString(member.acknowledgementNo) &&
+    optionalString(member.selfAssessmentChallan)
   )
 }

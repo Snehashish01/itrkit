@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import {
+  AlertTriangle,
   Database,
   FileCheck2,
   FileLock2,
@@ -168,6 +169,11 @@ export function DocumentVaultPanel({
     [documents],
   )
 
+  const documentWarnings = useMemo(
+    () => documents.flatMap((document) => document.analysis?.warnings ?? []),
+    [documents],
+  )
+
   return (
     <section className="vault-panel" aria-labelledby={`vault-${memberId}`}>
       <div className="vault-heading">
@@ -235,6 +241,17 @@ export function DocumentVaultPanel({
                 <Trash2 size={16} />
               </button>
             </div>
+          ))}
+        </div>
+      )}
+
+      {documentWarnings.length > 0 && (
+        <div className="doc-warnings" role="status">
+          <span className="eyebrow">
+            <AlertTriangle size={13} /> Caution · verify before filing
+          </span>
+          {documentWarnings.map((warning) => (
+            <p key={warning}>{warning}</p>
           ))}
         </div>
       )}
